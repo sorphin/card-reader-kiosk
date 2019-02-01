@@ -9,7 +9,8 @@ class Index extends React.Component {
         <Head>
           <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         </Head>
-        <p>Hello world!</p>
+        <h1>Dover MakerSpce Checkin Kiosk</h1>
+        <h2>Please scan your badge begin</h2>
       </div>
     );
   }

@@ -6,12 +6,16 @@ import io from "socket.io-client";
 const exampleInitialState = {
   lastUpdate: 0,
   light: false,
-  count: 0
+  count: 0,
+  card: {}
 };
 
-const socket = io();
+const socket = io().on("reader/card", card => {
+  console.log("reader/card", card);
+});
 
 export const actionTypes = {
+  SCAN: "SCAN",
   TICK: "TICK",
   INCREMENT: "INCREMENT",
   DECREMENT: "DECREMENT",
@@ -21,6 +25,10 @@ export const actionTypes = {
 // REDUCERS
 export const reducer = (state = exampleInitialState, action) => {
   switch (action.type) {
+    case actionTypes.SCAN:
+      return Object.assign({}, state, {
+        card: action.card
+      });
     case actionTypes.TICK:
       return Object.assign({}, state, {
         lastUpdate: action.ts,
@@ -39,12 +47,16 @@ export const reducer = (state = exampleInitialState, action) => {
         count: exampleInitialState.count
       });
     default:
-      console.log(action.type);
+      console.log(">>>", action);
       return state;
   }
 };
 
 // ACTIONS
+export const cardScanned = card => dispatch => {
+  return dispatch({ type: actionTypes.SCAN, card });
+};
+
 export const serverRenderClock = isServer => dispatch => {
   return dispatch({ type: actionTypes.TICK, light: !isServer, ts: Date.now() });
 };
@@ -69,5 +81,9 @@ export const resetCount = () => dispatch => {
 };
 
 export function initializeStore(initialState = exampleInitialState) {
-  return createStore(reducer, initialState, composeWithDevTools(applyMiddleware(thunkMiddleware)));
+  return createStore(
+    reducer,
+    initialState,
+    composeWithDevTools(applyMiddleware(thunkMiddleware))
+  );
 }
