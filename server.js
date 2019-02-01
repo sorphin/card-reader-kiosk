@@ -18,10 +18,18 @@ io.on("connection", socket => {
   mqtt
     .connect(process.env.borkerURL)
     .on("error", error => console.error(error))
-    .on("message", (topic, message) =>
-      console.log("MQTT:", { topic, message: message.toString() })
-    )
-    .on("message", (topic, message) => socket.emit(topic, message.toString()))
+    .on("message", (topic, message) => {
+      var card = {};
+
+      try {
+        card = JSON.parse(message.toString());
+      } catch (err) {
+        card = Object.assign(card, { err });
+        console.error(err);
+      }
+
+      socket.emit(topic, card);
+    })
     .on("connect", () => console.log("Connected to MQTT"))
     .subscribe("reader/#");
 });
