@@ -6,11 +6,14 @@
   "author": "JONATHAN MEYER <jonathan@stejsoftware.com>",
   "license": "MIT",
   "dependencies": {
+    "@zeit/next-css": "^1.0.1",
+    "bootstrap": "^4.2.1",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
     "mqtt": "^2.18.8",
     "next": "^7.0.2",
     "react": "^16.7.0",
+    "react-bootstrap": "^1.0.0-beta.5",
     "react-dom": "^16.7.0",
     "react-redux": "^6.0.0",
     "redux": "^4.0.1",
@@ -21,6 +24,7 @@
     "socket.io-client": "^2.2.0"
   },
   "scripts": {
+    "reader" :"node cardReader.js",
     "dev": "node server.js",
     "build": "next build",
     "start": "NODE_ENV=production node server.js"

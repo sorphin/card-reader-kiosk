@@ -1,0 +1,7 @@
+.btn-toolbar > * + * {
+  margin-left: 0.5em;
+}
+
+.card {
+  margin-top: 0.5em;
+}

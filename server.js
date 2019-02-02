@@ -15,8 +15,9 @@ const nextHandler = nextApp.getRequestHandler();
 io.on("connection", socket => {
   console.log(`Socket connection from [${socket.id}]`);
 
-  mqtt
-    .connect(process.env.borkerURL)
+  var client = mqtt.connect(process.env.borkerURL);
+
+  client
     .on("error", error => console.error(error))
     .on("message", (topic, message) => {
       var card = {};
@@ -24,14 +25,20 @@ io.on("connection", socket => {
       try {
         card = JSON.parse(message.toString());
       } catch (err) {
-        card = Object.assign(card, { err });
-        console.error(err);
+        card = JSON.parse(JSON.stringify(message.toString()));
       }
 
       socket.emit(topic, card);
     })
     .on("connect", () => console.log("Connected to MQTT"))
+    .on("close", () => console.log("Disconnectd from MQTT"))
     .subscribe("reader/#");
+
+  socket.on("disconnect", reason => {
+    console.log(`Socket disconnected from [${socket.id}] `);
+
+    client.end();
+  });
 });
 
 nextApp

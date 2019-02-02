@@ -3,7 +3,8 @@ import { composeWithDevTools } from "redux-devtools-extension";
 import thunkMiddleware from "redux-thunk";
 
 const exampleInitialState = {
-  card: {}
+  card: null,
+  account: null
 };
 
 export const actionTypes = {
@@ -23,13 +24,11 @@ export const reducer = (state = exampleInitialState, action) => {
 };
 
 // ACTIONS
-export const loadInitialDataSocket = socket => {
-  return dispatch => {
-    socket.on("reader/card", card => {
-      dispatch({ type: actionTypes.SCAN, card });
-    });
-  };
-};
+export const loadInitialDataSocket = socket => dispatch =>
+  socket.on("reader/card", card => dispatch({ type: actionTypes.SCAN, card }));
+
+export const reset = () => dispatch =>
+  dispatch({ type: actionTypes.SCAN, card: null });
 
 export function initializeStore(initialState = exampleInitialState) {
   return createStore(
