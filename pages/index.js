@@ -1,17 +1,15 @@
 import React from "react";
 import Head from "next/head";
-import { connect } from "react-redux";
 import io from "socket.io-client";
+import { connect } from "react-redux";
+import { formSerialize } from "react-form-utils";
 
-import { loadInitialDataSocket, reset } from "../store";
+import { setCard, setAccount, reset } from "../store";
 
 import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
-import Form from "react-bootstrap/Form";
-import ButtonToolbar from "react-bootstrap/ButtonToolbar";
-import Button from "react-bootstrap/Button";
 import Image from "react-bootstrap/Image";
 
 import "bootstrap/dist/css/bootstrap-reboot.css";
@@ -19,31 +17,56 @@ import "bootstrap/dist/css/bootstrap-grid.css";
 import "bootstrap/dist/css/bootstrap.css";
 import "../static/style.css";
 
+import Account from "./Account";
+import RegisterForm from "./RegisterForm";
+import InvalidCard from "./InvalidCard";
+
 const mapStateToProps = (state = {}) => ({ ...state });
+const mapDispatchToProps = dispatch => ({
+  setCard: card => dispatch(setCard(card)),
+  setAccount: account => dispatch(setAccount(account)),
+  reset: () => dispatch(reset())
+});
 
 class Index extends React.Component {
   constructor(props) {
     super(props);
 
-    this.socket = io();
-    this.props.dispatch(loadInitialDataSocket(this.socket));
+    this.io = {
+      socket: io(),
+      reader: io("/reader"),
+      db: io("/db")
+    };
+
+    this.io.reader.on("reader/card", card => this.props.setCard(card));
+    this.io.db.on("account", account => this.props.setAccount(account));
   }
 
   componentWillUnmount() {
-    this.socket.disconnect();
+    this.io.socket.disconnect();
+  }
+
+  componentDidUpdate() {
+    if (this.props.card != null && this.props.account == null) {
+      this.io.db.emit("getAccount", this.props.card, account => {
+        this.props.setAccount(account);
+      });
+    }
   }
 
   handleSubmit(event) {
-    const form = event.currentTarget;
+    const { name, n_number } = formSerialize(event.target);
+    const { card } = this.props;
 
-    console.log({ form });
+    if (card && name && n_number);
 
-    event.preventDefault();
-    event.stopPropagation();
+    this.io.db.emit("createAccount", name, n_number, card, account => {
+      this.props.setAccount(account);
+    });
   }
 
   handleCancel(event) {
-    this.props.dispatch(reset());
+    this.props.reset();
   }
 
   render() {
@@ -71,56 +94,37 @@ class Index extends React.Component {
             <Col sm="9" md="9">
               {!this.props.card && (
                 <Card style={{ width: "100%", height: "100%" }}>
-                  <Card.Body>
-                    <Card.Title>Please scan your badge to begin</Card.Title>
-                  </Card.Body>
+                  <Card.Header>Please scan your badge to begin</Card.Header>
+                  <Card.Body />
                 </Card>
               )}
 
-              {this.props.card && !this.props.account && (
-                <Card style={{ width: "100%", height: "100%" }}>
-                  <Card.Body>
-                    <p>
-                      This appeares to be your first time here. Please fill out
-                      the form to register.
-                    </p>
-                    <Form onSubmit={e => this.handleSubmit(e)}>
-                      <Form.Group controlId="name">
-                        <Form.Label>Name</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="<<< enter your name >>>"
-                        />
-                      </Form.Group>
-
-                      <Form.Group controlId="n_number">
-                        <Form.Label>N-Number</Form.Label>
-                        <Form.Control
-                          type="text"
-                          placeholder="<<< enter your N number >>>"
-                        />
-                      </Form.Group>
-
-                      <ButtonToolbar>
-                        <Button variant="liberty-primary" type="submit">
-                          Register
-                        </Button>
-                        <Button
-                          variant="liberty-secondary"
-                          onClick={e => this.handleCancel(e)}
-                        >
-                          Cancel
-                        </Button>
-                      </ButtonToolbar>
-                    </Form>
-                  </Card.Body>
-                </Card>
-              )}
+              {this.props.card &&
+                (this.props.account ? (
+                  <Account
+                    account={this.props.account}
+                    onDone={e => {
+                      this.handleCancel(e);
+                    }}
+                  />
+                ) : this.props.card.FacilityCode > 0 &&
+                  this.props.card.CardCode > 0 ? (
+                  <RegisterForm
+                    onSubmit={e => this.handleSubmit(e)}
+                    onCancel={e => this.handleCancel(e)}
+                  />
+                ) : (
+                  <InvalidCard
+                    onOk={e => {
+                      this.handleCancel(e);
+                    }}
+                  />
+                ))}
             </Col>
             <Col sm="3" md="3">
               <Card style={{ width: "100%", height: "100%" }}>
+                <Card.Header>Raw Data</Card.Header>
                 <Card.Body>
-                  <Card.Title>Raw Data</Card.Title>
                   <Card.Text
                     style={{
                       fontSize: "small",
@@ -146,4 +150,7 @@ class Index extends React.Component {
   }
 }
 
-export default connect(mapStateToProps)(Index);
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Index);

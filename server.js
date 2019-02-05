@@ -5,18 +5,27 @@ const server = require("http").Server(app);
 const io = require("socket.io")(server);
 const next = require("next");
 const mqtt = require("mqtt");
+const mongoose = require("mongoose");
 
 const port = parseInt(process.env.PORT, 10) || 3000;
 const dev = process.env.NODE_ENV !== "production";
 const nextApp = next({ dev });
 const nextHandler = nextApp.getRequestHandler();
 
+const socketIO_connected = socket => `Socket.io connected [${socket.id}]`;
+const socketIO_disconnected = socket => `Socket.io disconnected [${socket.id}]`;
+
 // socket.io server
 io.on("connection", socket => {
-  console.log(`Socket connection from [${socket.id}]`);
+  console.log(socketIO_connected(socket));
+  socket.on("disconnect", reason => console.log(socketIO_disconnected(socket)));
+});
+
+io.of("/reader").on("connection", socket => {
+  console.log(socketIO_connected(socket));
+  socket.on("disconnect", reason => console.log(socketIO_disconnected(socket)));
 
   var client = mqtt.connect(process.env.borkerURL);
-
   client
     .on("error", error => console.error(error))
     .on("message", (topic, message) => {
@@ -34,11 +43,83 @@ io.on("connection", socket => {
     .on("close", () => console.log("Disconnectd from MQTT"))
     .subscribe("reader/#");
 
-  socket.on("disconnect", reason => {
-    console.log(`Socket disconnected from [${socket.id}] `);
+  socket.on("disconnect", reason => client.end());
+});
 
-    client.end();
-  });
+const accountSchema = mongoose.Schema({
+  id: String,
+  name: String,
+  nNumber: String,
+  created: { type: Date, default: Date.now }
+});
+
+const Account = mongoose.model("Account", accountSchema);
+
+io.of("/db").on("connection", socket => {
+  console.log(socketIO_connected(socket));
+  socket.on("disconnect", reason => console.log(socketIO_disconnected(socket)));
+
+  mongoose.Promise = global.Promise;
+  mongoose
+    .connect(process.env.dbURL, { useMongoClient: true })
+    .then(db => {
+      console.log("Connected to MongoDB");
+
+      socket
+        .on("disconnect", reason =>
+          db
+            .close(true)
+            .then(() => console.log("Disconnected from MongDB"))
+            .catch(err => console.log("db close", err))
+        )
+        .on("getAccount", (card, cb) => {
+          console.log("getAccount:", { card });
+
+          const { FacilityCode, CardCode } = card;
+
+          Account.findOne({ id: `${FacilityCode}:${CardCode}` })
+            .then(account => {
+              console.log({ account });
+              cb && cb(account);
+            })
+            .catch(err => {
+              console.error(err);
+              cb && cb(null);
+            });
+        })
+        .on("createAccount", (name, nNumber, card, cb) => {
+          console.log("createAccount:", { name, nNumber, card });
+
+          const { FacilityCode, CardCode } = card;
+
+          if (FacilityCode > 0 && CardCode > 0) {
+            if (name && nNumber) {
+              Account.create({
+                id: `${FacilityCode}:${CardCode}`,
+                name,
+                nNumber
+              })
+                .then(account => {
+                  console.log({ account });
+                  cb && cb(account);
+                })
+                .catch(err => {
+                  console.error(err);
+                  cb && cb(null);
+                });
+            } else {
+              console.error(new Error("need both a name and n-number"));
+              cb && cb(null);
+            }
+          } else {
+            console.error(new Error("bad card data"));
+            cb && cb(null);
+          }
+        });
+    })
+    .catch(err => {
+      console.error(err);
+    });
 });
 
 nextApp
@@ -53,4 +134,6 @@ nextApp
       console.log(`> Ready on http://localhost:${port}`);
     });
   })
-  .catch(error => console.error(error));
+  .catch(error => {
+    console.error(error);
+  });
