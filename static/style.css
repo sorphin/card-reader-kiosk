@@ -5,3 +5,41 @@
 .card {
   margin-top: 0.5em;
 }
+
+.yellow-text {
+  color: #ffd000;
+}
+
+.blue-text {
+  color: #1a1446;
+}
+
+.teal-text {
+  color: #78e1e1;
+}
+
+.yellow-title-background {
+  background-color: #ffd000;
+}
+
+.yellow-background {
+  background-color: #ffeaa9;
+}
+
+.blue-background {
+  background-color: #1a1446;
+}
+
+.btn-liberty-primary {
+  color: #ffd000;
+  background-color: #1a1446;
+}
+
+.btn-liberty-primary:hover {
+  color: #78e1e1;
+}
+
+.btn-liberty-secondary {
+  color: #343741;
+  background-color: #e6e6e6;
+}
