@@ -28,6 +28,7 @@ class RegisterForm extends React.Component {
                 name="name"
                 type="text"
                 placeholder="<<< enter your name >>>"
+                autoFocus={true}
               />
             </Form.Group>
 

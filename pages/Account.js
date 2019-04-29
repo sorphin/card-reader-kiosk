@@ -13,6 +13,7 @@ class Account extends React.Component {
       <Card>
         <Card.Header>{name}</Card.Header>
         <Card.Body>
+          <Card.Text style={{ fontSize: "2em" }}>{name}</Card.Text>
           <ListGroup>
             <ListGroup.Item>
               <b>ID:</b> {id}
