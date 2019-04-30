@@ -1,3 +1,4 @@
+import _ from "lodash";
 import React from "react";
 import Head from "next/head";
 import io from "socket.io-client";
@@ -11,6 +12,8 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Image from "react-bootstrap/Image";
+
+import QRCode from "qrcode.react";
 
 import "bootstrap/dist/css/bootstrap-reboot.css";
 import "bootstrap/dist/css/bootstrap-grid.css";
@@ -38,8 +41,12 @@ class Index extends React.Component {
       db: io("/db")
     };
 
-    this.io.reader.on("reader/card", card => this.props.setCard(card));
-    this.io.db.on("account", account => this.props.setAccount(account));
+    this.io.reader.on("reader/card", card => {
+      console.log("Got a card: ", card);
+      this.props.setCard(card);
+    });
+
+    // this.io.db.on("account", account => this.props.setAccount(account));
   }
 
   componentWillUnmount() {
@@ -69,14 +76,19 @@ class Index extends React.Component {
     this.props.reset();
   }
 
+  dataUrl(data) {
+    return `data:application/json;base64,${Buffer.from(JSON.stringify(data, null, 2)).toString("base64")}`;
+  }
+
+  emailUrl(subject, data) {
+    return `mailto:?subject=${subject}&body=${encodeURI(JSON.stringify(data))}`;
+  }
+
   render() {
     return (
       <div>
         <Head>
-          <meta
-            name="viewport"
-            content="initial-scale=1.0, width=device-width"
-          />
+          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         </Head>
 
         <Container>
@@ -91,7 +103,7 @@ class Index extends React.Component {
             </Col>
           </Row>
           <Row className="yellow-background">
-            <Col sm="9" md="9">
+            <Col lg="9" md="7">
               {!this.props.card && (
                 <Card style={{ width: "100%", height: "100%" }}>
                   <Card.Header>Please scan your badge to begin</Card.Header>
@@ -107,12 +119,8 @@ class Index extends React.Component {
                       this.handleCancel(e);
                     }}
                   />
-                ) : this.props.card.FacilityCode > 0 &&
-                  this.props.card.CardCode > 0 ? (
-                  <RegisterForm
-                    onSubmit={e => this.handleSubmit(e)}
-                    onCancel={e => this.handleCancel(e)}
-                  />
+                ) : this.props.card.FacilityCode > 0 && this.props.card.CardCode > 0 ? (
+                  <RegisterForm onSubmit={e => this.handleSubmit(e)} onCancel={e => this.handleCancel(e)} />
                 ) : (
                   <InvalidCard
                     onOk={e => {
@@ -121,8 +129,8 @@ class Index extends React.Component {
                   />
                 ))}
             </Col>
-            <Col sm="3" md="3">
-              <Card style={{ width: "100%", height: "100%" }}>
+            <Col lg="3" md="5">
+              <Card style={{ width: 250, height: "100%" }}>
                 <Card.Header>Raw Data</Card.Header>
                 <Card.Body>
                   <Card.Text
@@ -135,8 +143,13 @@ class Index extends React.Component {
                       overflow: "auto"
                     }}
                   >
-                    {JSON.stringify(this.props, null, 2)}
+                    {JSON.stringify(_.omit(this.props, "data"), null, 2)}
                   </Card.Text>
+                  <a href={this.dataUrl(this.props)}>data</a>
+                  <hr />
+                  <div className="text-center">
+                    <QRCode value={this.emailUrl("Check-In Kisok Data", _.omit(this.props, "data"))} size={200} />
+                  </div>
                 </Card.Body>
               </Card>
             </Col>

@@ -2,20 +2,22 @@ import { createStore, applyMiddleware } from "redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import thunkMiddleware from "redux-thunk";
 
-const exampleInitialState = {
+const initialState = {
   card: null,
-  account: null
+  account: null,
+  data: null
 };
 
 export const actionTypes = {
   CARD: "CARD",
   ACCOUNT: "ACCOUNT",
   RESET: "REST",
-  GET_ACCOUNT: "GET_ACCOUNT"
+  GET_ACCOUNT: "GET_ACCOUNT",
+  SET_DATA: "SET_DATA"
 };
 
 // REDUCERS
-export const reducer = (state = exampleInitialState, action) => {
+export const reducer = (state = initialState, action) => {
   switch (action.type) {
     case actionTypes.RESET:
       return Object.assign({}, state, {
@@ -32,6 +34,11 @@ export const reducer = (state = exampleInitialState, action) => {
     case actionTypes.ACCOUNT:
       return Object.assign({}, state, {
         account: action.account
+      });
+
+    case actionTypes.SET_DATA:
+      return Object.assign({}, state, {
+        data: action.data
       });
 
     default:
@@ -52,10 +59,10 @@ export const reset = () => dispatch => {
   return dispatch({ type: actionTypes.RESET });
 };
 
-export function initializeStore(initialState = exampleInitialState) {
-  return createStore(
-    reducer,
-    initialState,
-    composeWithDevTools(applyMiddleware(thunkMiddleware))
-  );
+export const setData = data => dispatch => {
+  return dispatch({ type: actionTypes.SET_DATA, data });
+};
+
+export function initializeStore(state = initialState) {
+  return createStore(reducer, state, composeWithDevTools(applyMiddleware(thunkMiddleware)));
 }

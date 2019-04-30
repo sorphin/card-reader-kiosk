@@ -3,11 +3,9 @@ require("dotenv").config();
 const mqtt = require("mqtt");
 
 const client = mqtt
-  .connect(process.env.borkerURL)
+  .connect(process.env.borkerURL, { protocolId: "MQIsdp", protocolVersion: 3 })
   .on("error", error => console.log(error))
-  .on("message", (topic, message) =>
-    console.log(`[${topic}] ${message.toString()}`)
-  )
+  .on("message", (topic, message) => console.log(`[${topic}] ${message.toString()}`))
   .on("connect", () => {
     client.publish(
       "reader/card",

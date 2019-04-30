@@ -25,8 +25,8 @@ io.of("/reader").on("connection", socket => {
   console.log(socketIO_connected(socket));
   socket.on("disconnect", reason => console.log(socketIO_disconnected(socket)));
 
-  var client = mqtt.connect(process.env.borkerURL);
-  client
+  var client = mqtt
+    .connect(process.env.borkerURL, { protocolId: "MQIsdp", protocolVersion: 3 })
     .on("error", error => console.error(error))
     .on("message", (topic, message) => {
       var card = {};
@@ -115,7 +115,16 @@ io.of("/db").on("connection", socket => {
             console.error(new Error("bad card data"));
             cb && cb(null);
           }
+        })
+        .on("dumpData", cb => {
+          console.log("dumpData:", {});
+
+          Account.find().then(accounts => {
+            cb && cb(accounts);
+          });
         });
+
+      socket.emit("mongoConnected");
     })
     .catch(err => {
       console.error(err);
