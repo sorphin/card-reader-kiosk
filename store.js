@@ -9,11 +9,10 @@ const initialState = {
 };
 
 export const actionTypes = {
+  RESET: "REST",
   CARD: "CARD",
   ACCOUNT: "ACCOUNT",
-  RESET: "REST",
-  GET_ACCOUNT: "GET_ACCOUNT",
-  SET_DATA: "SET_DATA"
+  DATA: "DATA"
 };
 
 // REDUCERS
@@ -22,7 +21,8 @@ export const reducer = (state = initialState, action) => {
     case actionTypes.RESET:
       return Object.assign({}, state, {
         card: null,
-        account: null
+        account: null,
+        data: null
       });
 
     case actionTypes.CARD:
@@ -36,7 +36,7 @@ export const reducer = (state = initialState, action) => {
         account: action.account
       });
 
-    case actionTypes.SET_DATA:
+    case actionTypes.DATA:
       return Object.assign({}, state, {
         data: action.data
       });
@@ -47,6 +47,10 @@ export const reducer = (state = initialState, action) => {
 };
 
 // ACTIONS
+export const reset = () => dispatch => {
+  return dispatch({ type: actionTypes.RESET });
+};
+
 export const setCard = card => dispatch => {
   return dispatch({ type: actionTypes.CARD, card });
 };
@@ -55,14 +59,11 @@ export const setAccount = account => dispatch => {
   return dispatch({ type: actionTypes.ACCOUNT, account });
 };
 
-export const reset = () => dispatch => {
-  return dispatch({ type: actionTypes.RESET });
-};
-
 export const setData = data => dispatch => {
-  return dispatch({ type: actionTypes.SET_DATA, data });
+  return dispatch({ type: actionTypes.DATA, data });
 };
 
+//
 export function initializeStore(state = initialState) {
   return createStore(reducer, state, composeWithDevTools(applyMiddleware(thunkMiddleware)));
 }

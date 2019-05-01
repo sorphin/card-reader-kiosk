@@ -13,7 +13,7 @@ const client = mqtt
         BitCount: 35,
         CardType: "Test Card",
         FacilityCode: 999,
-        CardCode: 012346
+        CardCode: 012347
       })
     );
 

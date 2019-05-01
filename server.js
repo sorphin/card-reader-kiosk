@@ -46,12 +46,21 @@ io.of("/reader").on("connection", socket => {
   socket.on("disconnect", reason => client.end());
 });
 
-const accountSchema = mongoose.Schema({
-  id: String,
-  name: String,
+const checkinSchema = mongoose.Schema({
   nNumber: String,
   created: { type: Date, default: Date.now }
 });
+
+const accountSchema = mongoose.Schema(
+  {
+    id: String,
+    name: String,
+    nNumber: String,
+    checkins: [checkinSchema],
+    created: { type: Date, default: Date.now }
+  },
+  { usePushEach: true }
+);
 
 const Account = mongoose.model("Account", accountSchema);
 
@@ -73,11 +82,12 @@ io.of("/db").on("connection", socket => {
             .catch(err => console.log("db close", err))
         )
         .on("getAccount", (card, cb) => {
-          console.log("getAccount:", { card });
+          console.log("getAccount()", { card });
 
           const { FacilityCode, CardCode } = card;
 
           Account.findOne({ id: `${FacilityCode}:${CardCode}` })
+            .then(account => Object.assign(account, { checkins: account.checkins.slice(-1) }))
             .then(account => {
               console.log({ account });
               cb && cb(account);
@@ -87,8 +97,29 @@ io.of("/db").on("connection", socket => {
               cb && cb(null);
             });
         })
+        .on("checkin", (account, cb) => {
+          console.log("checkin()", { account });
+
+          Account.findById(account._id)
+            .then(account => {
+              account.checkins.push({ nNumber: account.nNumber });
+              account
+                .save()
+                .then(() => {
+                  cb && cb(account.checkins.slice(-1));
+                })
+                .catch(err => {
+                  console.error(err);
+                  cb && cb(null);
+                });
+            })
+            .catch(err => {
+              console.error(err);
+              cb && cb(null);
+            });
+        })
         .on("createAccount", (name, nNumber, card, cb) => {
-          console.log("createAccount:", { name, nNumber, card });
+          console.log("createAccount()", { name, nNumber, card });
 
           const { FacilityCode, CardCode } = card;
 
@@ -117,11 +148,36 @@ io.of("/db").on("connection", socket => {
           }
         })
         .on("dumpData", cb => {
-          console.log("dumpData:", {});
+          console.log("dumpData()");
 
-          Account.find().then(accounts => {
-            cb && cb(accounts);
-          });
+          const headers = { name: "Name", nNumber: "N-Number", checkins: "Last-Check-In" };
+
+          Account.find()
+            .then(accounts => {
+              cb &&
+                cb(
+                  [headers, ...accounts].reduce(
+                    (a, c) => [
+                      ...a,
+                      [
+                        c.name,
+                        c.nNumber,
+                        Array.isArray(c.checkins)
+                          ? c.checkins
+                              .slice(-1)
+                              .map(checkin => checkin.created.toISOString())
+                              .join()
+                          : c.checkins
+                      ]
+                    ],
+                    []
+                  )
+                );
+            })
+            .catch(err => {
+              console.error(err);
+              cb && cb(null);
+            });
         });
 
       socket.emit("mongoConnected");

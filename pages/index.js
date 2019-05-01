@@ -42,11 +42,8 @@ class Index extends React.Component {
     };
 
     this.io.reader.on("reader/card", card => {
-      console.log("Got a card: ", card);
       this.props.setCard(card);
     });
-
-    // this.io.db.on("account", account => this.props.setAccount(account));
   }
 
   componentWillUnmount() {
@@ -56,7 +53,9 @@ class Index extends React.Component {
   componentDidUpdate() {
     if (this.props.card != null && this.props.account == null) {
       this.io.db.emit("getAccount", this.props.card, account => {
-        this.props.setAccount(account);
+        this.io.db.emit("checkin", account, checkin => {
+          this.props.setAccount(account);
+        });
       });
     }
   }
@@ -115,6 +114,7 @@ class Index extends React.Component {
                 (this.props.account ? (
                   <Account
                     account={this.props.account}
+                    checkin={this.props.checkin}
                     onDone={e => {
                       this.handleCancel(e);
                     }}
@@ -145,7 +145,6 @@ class Index extends React.Component {
                   >
                     {JSON.stringify(_.omit(this.props, "data"), null, 2)}
                   </Card.Text>
-                  <a href={this.dataUrl(this.props)}>data</a>
                   <hr />
                   <div className="text-center">
                     <QRCode value={this.emailUrl("Check-In Kisok Data", _.omit(this.props, "data"))} size={200} />

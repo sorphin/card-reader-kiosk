@@ -17,7 +17,6 @@ import "../static/style.css";
 
 const mapStateToProps = (state = {}) => ({ ...state });
 const mapDispatchToProps = dispatch => ({
-  dumpData: () => dispatch(dumpData()),
   setData: data => dispatch(setData(data))
 });
 
@@ -31,7 +30,6 @@ class DumpData extends React.Component {
 
     this.io.db.on("mongoConnected", () => {
       this.io.db.emit("dumpData", data => {
-        console.log(data);
         this.props.setData(data);
       });
     });
@@ -45,29 +43,20 @@ class DumpData extends React.Component {
     this.io.db.disconnect();
   }
 
-  componentDidUpdate() {
-    if (this.props.data == null) {
-      this.io.db.emit("dumpData", data => {
-        this.props.setData(data);
-      });
-    }
-  }
-
   emailUrl(subject, data) {
-    return `mailto:?subject=${subject}&body=${encodeURI(JSON.stringify(data))}`;
+    return `mailto:?subject=${subject}&body=${encodeURI(typeof data !== "string" ? JSON.stringify(data) : data)}`;
   }
 
   render() {
     return (
       <Container className="d-flex justify-content-center align-items-center vh-100">
-        <Row>
-          <Col>
-            <QRCode size={400} value={this.emailUrl("Kiosk Data", this.props.data)} />
-          </Col>
-          <Col>
-            <pre>{JSON.stringify(this.props.data, null, 2)}</pre>
-          </Col>
-        </Row>
+        {this.props.data && (
+          <div>
+            <QRCode className="m-3" size={400} value={this.emailUrl("Kiosk Data", this.props.data.map(row => row.join(",")).join("\n"))} />
+            <pre className="w-100 h-50 border shadow scrollable">{this.props.data.map(row => JSON.stringify(row) + "\n")}</pre>
+          </div>
+        )}
+        {!this.props.data && <div>getting data ...</div>}
       </Container>
     );
   }
