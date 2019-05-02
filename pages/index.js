@@ -53,8 +53,8 @@ class Index extends React.Component {
   componentDidUpdate() {
     if (this.props.card != null && this.props.account == null) {
       this.io.db.emit("getAccount", this.props.card, account => {
-        this.io.db.emit("checkin", account, checkin => {
-          this.props.setAccount(account);
+        this.io.db.emit("checkin", account, checkins => {
+          this.props.setAccount(Object.assign(account, {checkins}));
         });
       });
     }

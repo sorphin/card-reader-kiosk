@@ -32,6 +32,7 @@
   "scripts": {
     "reader": "node cardReader.js",
     "build": "next build",
-    "start": "node server.js"
+    "start": "node server.js",
+    "prod": "sudo NODE_ENV=production PORT=80 node server.js"
   }
 }
