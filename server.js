@@ -153,6 +153,7 @@ io.of("/db").on("connection", socket => {
           const headers = { name: "Name", nNumber: "N-Number", checkins: "Last-Check-In" };
 
           Account.find()
+            .then(accounts => accounts.filter(account => account.checkins.length > 0))
             .then(accounts => {
               cb &&
                 cb(
@@ -164,9 +165,9 @@ io.of("/db").on("connection", socket => {
                         c.nNumber,
                         Array.isArray(c.checkins)
                           ? c.checkins
-                              .slice(-1)
-                              .map(checkin => checkin.created.toISOString())
-                              .join()
+                            .slice(-1)
+                            .map(checkin => checkin.created.toISOString())
+                            .join()
                           : c.checkins
                       ]
                     ],
