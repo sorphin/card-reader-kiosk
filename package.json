@@ -8,9 +8,12 @@
   "dependencies": {
     "@zeit/next-css": "^1.0.1",
     "bootstrap": "^4.2.1",
+    "chai": "^4.2.0",
+    "commander": "^2.20.0",
     "dotenv": "^6.2.0",
     "express": "^4.16.4",
     "lodash": "^4.17.11",
+    "mocha": "^6.1.4",
     "moment": "^2.24.0",
     "mongoose": "^4.0.0",
     "mqtt": "^2.18.8",
@@ -32,7 +35,6 @@
   "scripts": {
     "reader": "node cardReader.js",
     "build": "next build",
-    "start": "node server.js",
-    "prod": "sudo NODE_ENV=production PORT=80 node server.js"
+    "start": "node server.js"
   }
 }

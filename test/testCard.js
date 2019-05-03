@@ -1,6 +1,12 @@
 require("dotenv").config();
-
+const program = require("commander");
 const mqtt = require("mqtt");
+
+program
+  .version("0.1")
+  .option("-n, --name <name>")
+  .option("-c, --code <code")
+  .parse(process.argv);
 
 const client = mqtt
   .connect(process.env.borkerURL, { protocolId: "MQIsdp", protocolVersion: 3 })
@@ -11,9 +17,9 @@ const client = mqtt
       "reader/card",
       JSON.stringify({
         BitCount: 35,
-        CardType: "Test Card",
+        CardType: program.name || "Test Card",
         FacilityCode: 999,
-        CardCode: 012347
+        CardCode: program.code || 123456789
       })
     );
 
