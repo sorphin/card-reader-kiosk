@@ -100,7 +100,7 @@ io.of("/db").on("connection", socket => {
         .on("checkin", (account, cb) => {
           console.log("checkin()", { account });
 
-          Account.findById(account._id)
+         account && Account.findById(account._id)
             .then(account => {
               account.checkins.push({ nNumber: account.nNumber });
               account
