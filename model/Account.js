@@ -6,7 +6,7 @@ module.exports = mongoose.model(
     {
       id: String,
       name: String,
-      nNumber: String,
+      nNumber: { type: String, index: true, uppercase: true, trim: true },
       checkins: [
         mongoose.Schema({
           nNumber: String,

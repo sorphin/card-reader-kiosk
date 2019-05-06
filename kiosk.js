@@ -2,12 +2,34 @@ const parse = require("csv-parse");
 const fs = require("fs");
 const mongoose = require("mongoose");
 const Account = require("./model/Account");
+const User = require("./model/User");
+
+mongoose.Promise = global.Promise;
 
 require("dotenv").config();
 require("yargs")
   .command(
+    "export",
+    "Export User Collection.",
+    yargs => {},
+    argv =>
+      mongoose
+        .connect(process.env.dbURL, { useMongoClient: true })
+        .then(db => {
+          User.find()
+            .then(data => {
+              console.log(data);
+            })
+            .then(() => {
+              db.close();
+            })
+            .catch(err => console.error(err));
+        })
+        .catch(err => console.error(err))
+  )
+  .command(
     "import [file]",
-    "Import a CSV file into the database.",
+    "Import a CSV file (First Name,Last Name,Email,Number) into the User Collection.",
     yargs => {
       yargs
         .positional("file", {
@@ -16,9 +38,7 @@ require("yargs")
         })
         .demandOption("file", "I need a file to import");
     },
-    argv => {
-      mongoose.Promise = global.Promise;
-
+    argv =>
       mongoose
         .connect(process.env.dbURL, { useMongoClient: true })
         .then(db => {
@@ -35,15 +55,24 @@ require("yargs")
                   .map(record => ({
                     first: record["First Name"],
                     last: record["Last Name"],
-                    nNumber: record["EMP#"]
+                    number: record["Number"],
+                    email: record["Email"]
                   }))
                   .map(record =>
-                    Account.find({ nNumber: record.nNumber })
+                    User.find({ number: new RegExp(record.number, "i") })
                       .then(data => {
                         if (data.length == 0) {
-                          
+                          User.create({
+                            name: `${record.first} ${record.last}`,
+                            number: record.number,
+                            email: record.email
+                          })
+                            .then(user => {
+                              console.log(`${user.name} (${user.number}) added`);
+                            })
+                            .catch(err => console.error(err));
                         } else {
-                          console.log(record.nNumber, data);
+                          console.log(record.number, "exists");
                         }
                       })
                       .catch(err => console.error(err))
@@ -56,8 +85,7 @@ require("yargs")
             });
           });
         })
-        .catch(err => console.error(err));
-    }
+        .catch(err => console.error(err))
   )
   .demandCommand(1, "You need at least one command before moving on")
   .help()
