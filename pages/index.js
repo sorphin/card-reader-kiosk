@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import { connect } from "react-redux";
 import { formSerialize } from "react-form-utils";
 
-import { setCard, setAccount, reset } from "../store";
+import { setCard, setAccount, setCheckin, reset } from "../store";
 
 import Card from "react-bootstrap/Card";
 import Container from "react-bootstrap/Container";
@@ -28,6 +28,7 @@ const mapStateToProps = (state = {}) => ({ ...state });
 const mapDispatchToProps = dispatch => ({
   setCard: card => dispatch(setCard(card)),
   setAccount: account => dispatch(setAccount(account)),
+  setCheckin: checkin => dispatch(setCheckin(checkin)),
   reset: () => dispatch(reset())
 });
 
@@ -53,9 +54,13 @@ class Index extends React.Component {
   componentDidUpdate() {
     if (this.props.card != null && this.props.account == null) {
       this.io.db.emit("getAccount", this.props.card, account => {
-        this.io.db.emit("checkin", account, checkins => {
-          this.props.setAccount(Object.assign(account, {checkins}));
-        });
+        this.props.setAccount(account);
+      });
+    }
+
+    if (this.props.account != null && this.props.checkin == null) {
+      this.io.db.emit("checkin", this.props.account, checkin => {
+        this.props.setCheckin(checkin);
       });
     }
   }
@@ -64,11 +69,11 @@ class Index extends React.Component {
     const { name, n_number } = formSerialize(event.target);
     const { card } = this.props;
 
-    if (card && name && n_number);
-
-    this.io.db.emit("createAccount", name, n_number, card, account => {
-      this.props.setAccount(account);
-    });
+    if (card && name && n_number) {
+      this.io.db.emit("createAccount", name, n_number, card, account => {
+        this.props.setAccount(account);
+      });
+    }
   }
 
   handleCancel(event) {
@@ -84,6 +89,7 @@ class Index extends React.Component {
   }
 
   render() {
+    var raw_data = JSON.stringify({ card: this.props.card, account: this.props.account }, null, 2);
     return (
       <div>
         <Head>
@@ -133,6 +139,10 @@ class Index extends React.Component {
               <Card style={{ width: 250, height: "100%" }}>
                 <Card.Header>Raw Data</Card.Header>
                 <Card.Body>
+                  <div className="text-center">
+                    <QRCode value={raw_data} size={200} />
+                  </div>
+                  <hr />
                   <Card.Text
                     style={{
                       fontSize: "small",
@@ -143,12 +153,8 @@ class Index extends React.Component {
                       overflow: "auto"
                     }}
                   >
-                    {JSON.stringify(_.omit(this.props, "data"), null, 2)}
+                    {raw_data}
                   </Card.Text>
-                  <hr />
-                  <div className="text-center">
-                    <QRCode value={this.emailUrl("Check-In Kisok Data", _.omit(this.props, "data"))} size={200} />
-                  </div>
                 </Card.Body>
               </Card>
             </Col>

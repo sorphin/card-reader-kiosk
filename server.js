@@ -15,6 +15,8 @@ const nextHandler = nextApp.getRequestHandler();
 const socketIO_connected = socket => `Socket.io connected [${socket.id}]`;
 const socketIO_disconnected = socket => `Socket.io disconnected [${socket.id}]`;
 
+const Account = require("./model/Account");
+
 // socket.io server
 io.on("connection", socket => {
   console.log(socketIO_connected(socket));
@@ -46,24 +48,6 @@ io.of("/reader").on("connection", socket => {
   socket.on("disconnect", reason => client.end());
 });
 
-const checkinSchema = mongoose.Schema({
-  nNumber: String,
-  created: { type: Date, default: Date.now }
-});
-
-const accountSchema = mongoose.Schema(
-  {
-    id: String,
-    name: String,
-    nNumber: String,
-    checkins: [checkinSchema],
-    created: { type: Date, default: Date.now }
-  },
-  { usePushEach: true }
-);
-
-const Account = mongoose.model("Account", accountSchema);
-
 io.of("/db").on("connection", socket => {
   console.log(socketIO_connected(socket));
   socket.on("disconnect", reason => console.log(socketIO_disconnected(socket)));
@@ -87,7 +71,7 @@ io.of("/db").on("connection", socket => {
           const { FacilityCode, CardCode } = card;
 
           Account.findOne({ id: `${FacilityCode}:${CardCode}` })
-            .then(account => Object.assign(account, { checkins: account.checkins.slice(-1) }))
+            .then(account => account && Object.assign(account, { checkins: account.checkins.slice(-1) }))
             .then(account => {
               console.log({ account });
               cb && cb(account);
@@ -100,23 +84,18 @@ io.of("/db").on("connection", socket => {
         .on("checkin", (account, cb) => {
           console.log("checkin()", { account });
 
-         account && Account.findById(account._id)
+          var { _id } = account;
+
+          Account.findById(_id)
             .then(account => {
               account.checkins.push({ nNumber: account.nNumber });
               account
                 .save()
-                .then(() => {
-                  cb && cb(account.checkins.slice(-1));
-                })
-                .catch(err => {
-                  console.error(err);
-                  cb && cb(null);
-                });
+                .then(() => account.checkins.slice(-1).reduce((a, c) => c, {}))
+                .then(checkin => console.log({ checkin }) || (cb && cb(checkin)))
+                .catch(err => console.error(err) || (cb && cb(null)));
             })
-            .catch(err => {
-              console.error(err);
-              cb && cb(null);
-            });
+            .catch(err => console.error(err) || (cb && cb(null)));
         })
         .on("createAccount", (name, nNumber, card, cb) => {
           console.log("createAccount()", { name, nNumber, card });
@@ -165,9 +144,9 @@ io.of("/db").on("connection", socket => {
                         c.nNumber,
                         Array.isArray(c.checkins)
                           ? c.checkins
-                            .slice(-1)
-                            .map(checkin => checkin.created.toISOString())
-                            .join()
+                              .slice(-1)
+                              .map(checkin => checkin.created.toISOString())
+                              .join()
                           : c.checkins
                       ]
                     ],

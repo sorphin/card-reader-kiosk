@@ -5,13 +5,15 @@ import thunkMiddleware from "redux-thunk";
 const initialState = {
   card: null,
   account: null,
-  data: null
+  data: null,
+  checkin: null
 };
 
 export const actionTypes = {
   RESET: "REST",
   CARD: "CARD",
   ACCOUNT: "ACCOUNT",
+  CHECKIN: "CHECKIN",
   DATA: "DATA"
 };
 
@@ -22,18 +24,25 @@ export const reducer = (state = initialState, action) => {
       return Object.assign({}, state, {
         card: null,
         account: null,
-        data: null
+        checkin: null
       });
 
     case actionTypes.CARD:
       return Object.assign({}, state, {
         card: action.card,
-        account: null
+        account: null,
+        checkin: null
       });
 
     case actionTypes.ACCOUNT:
       return Object.assign({}, state, {
-        account: action.account
+        account: action.account,
+        checkin: null
+      });
+
+    case actionTypes.CHECKIN:
+      return Object.assign({}, state, {
+        checkin: action.checkin
       });
 
     case actionTypes.DATA:
@@ -57,6 +66,10 @@ export const setCard = card => dispatch => {
 
 export const setAccount = account => dispatch => {
   return dispatch({ type: actionTypes.ACCOUNT, account });
+};
+
+export const setCheckin = checkin => dispatch => {
+  return dispatch({ type: actionTypes.CHECKIN, checkin });
 };
 
 export const setData = data => dispatch => {
