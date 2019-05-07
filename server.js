@@ -6,6 +6,7 @@ const io = require("socket.io")(server);
 const next = require("next");
 const mqtt = require("mqtt");
 const mongoose = require("mongoose");
+const moment = require("moment");
 
 const port = parseInt(process.env.PORT, 10) || 3000;
 const dev = process.env.NODE_ENV !== "production";
@@ -126,34 +127,24 @@ io.of("/db").on("connection", socket => {
             cb && cb(null);
           }
         })
-        .on("dumpData", cb => {
+        .on("dumpData", (start, end, cb) => {
           console.log("dumpData()");
 
           const headers = { name: "Name", nNumber: "N-Number", checkins: "Last-Check-In" };
+          const today = moment().startOf("day");
+          const tomorrow = moment()
+            .startOf("day")
+            .add(1, "days");
 
           Account.find()
-            .then(accounts => accounts.filter(account => account.checkins.length > 0))
-            .then(accounts => {
-              cb &&
-                cb(
-                  [headers, ...accounts].reduce(
-                    (a, c) => [
-                      ...a,
-                      [
-                        c.name,
-                        c.nNumber,
-                        Array.isArray(c.checkins)
-                          ? c.checkins
-                              .slice(-1)
-                              .map(checkin => checkin.created.toISOString())
-                              .join()
-                          : c.checkins
-                      ]
-                    ],
-                    []
-                  )
-                );
-            })
+            .then(accounts =>
+              accounts
+                .filter(account => account.checkins.length > 0)
+                .map(account => ({ name: account.name, nNumber: account.nNumber, checkins: account.checkins.slice(-1)[0].created }))
+                .filter(account => moment(account.checkins).isSameOrAfter(start || today) && moment(account.checkins).isBefore(end || tomorrow, "day"))
+            )
+            .then(accounts => [headers, ...accounts].reduce((a, c) => [...a, [c.name, c.nNumber, c.checkins]], []))
+            .then(accounts => cb && cb(accounts))
             .catch(err => {
               console.error(err);
               cb && cb(null);
