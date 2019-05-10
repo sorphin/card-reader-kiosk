@@ -12,7 +12,8 @@ class RegisterForm extends React.Component {
 
     this.state = {
       name: "",
-      number: ""
+      number: "",
+      email: ""
     };
   }
 
@@ -47,12 +48,16 @@ class RegisterForm extends React.Component {
               />
             </Form.Group>
             <Form.Group>
+              <Form.Label>Number</Form.Label>
+              <Form.Control name="number" type="text" value={this.state.number} onChange={e => this.onChange(e)} />
+            </Form.Group>
+            <Form.Group>
               <Form.Label>Name</Form.Label>
               <Form.Control name="name" type="text" value={this.state.name} onChange={e => this.onChange(e)} />
             </Form.Group>
             <Form.Group>
-              <Form.Label>Number</Form.Label>
-              <Form.Control name="number" type="text" value={this.state.number} onChange={e => this.onChange(e)} />
+              <Form.Label>Email</Form.Label>
+              <Form.Control name="email" type="text" value={this.state.email} onChange={e => this.onChange(e)} />
             </Form.Group>
             <ButtonToolbar>
               <Button variant="liberty-primary" type="submit">

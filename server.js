@@ -103,8 +103,8 @@ io.of("/db").on("connection", socket => {
             })
             .catch(err => console.error(err) || (cb && cb(null)));
         })
-        .on("createAccount", (name, nNumber, card, cb) => {
-          console.log("createAccount()", { name, nNumber, card });
+        .on("createAccount", (name, nNumber, email, card, cb) => {
+          console.log("createAccount()", { name, nNumber, email, card });
 
           const { FacilityCode, CardCode } = card;
 
@@ -113,7 +113,8 @@ io.of("/db").on("connection", socket => {
               Account.create({
                 id: `${FacilityCode}:${CardCode}`,
                 name,
-                nNumber
+                nNumber,
+                email
               })
                 .then(account => {
                   console.log({ account });

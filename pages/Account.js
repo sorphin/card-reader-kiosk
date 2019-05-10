@@ -8,7 +8,7 @@ import Button from "react-bootstrap/Button";
 
 class Account extends React.Component {
   render() {
-    const { name, nNumber, id, created, checkins } = this.props.account;
+    const { name, nNumber, email, id, created, checkins } = this.props.account;
 
     return (
       <Card>
@@ -17,13 +17,16 @@ class Account extends React.Component {
           <Card.Text style={{ fontSize: "2em" }}>{name}</Card.Text>
           <ListGroup>
             <ListGroup.Item>
-              <b>ID: </b> {id}
+              <b>Number: </b> {nNumber}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <b>Email: </b> {email}
+            </ListGroup.Item>
+            <ListGroup.Item>
+              <b>Card#: </b> {id}
             </ListGroup.Item>
             <ListGroup.Item>
               <b>Created: </b> <Moment fromNow>{created}</Moment>
-            </ListGroup.Item>
-            <ListGroup.Item>
-              <b>N-Number: </b> {nNumber}
             </ListGroup.Item>
             <ListGroup.Item>
               <b>Checkin: </b>

@@ -13,6 +13,8 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Image from "react-bootstrap/Image";
 import Badge from "react-bootstrap/Badge";
+import Alert from "react-bootstrap/Alert";
+import Button from "react-bootstrap/Button";
 
 import QRCode from "qrcode.react";
 
@@ -89,20 +91,22 @@ class Index extends React.Component {
   }
 
   handleSubmit(event) {
-    const { name, number } = formSerialize(event.target);
+    const { name, number, email } = formSerialize(event.target);
     const { card } = this.props;
 
     if (card && name && number) {
-      this.io.db.emit("createAccount", name, number, card, account => {
+      this.io.db.emit("createAccount", name, number, email, card, account => {
         this.props.setAccount(account);
       });
+    } else {
+      this.setState({ alert: "Need both Name and N-number to register." });
     }
   }
 
   loadOptions(input) {
     return new Promise(resolve => {
       this.io.db.emit("getUsers", input, users => {
-        (users && resolve(users.map(u => ({ value: { number: u.number, name: u.name }, label: `${u.number} (${u.name})` })))) || resolve([]);
+        (users && resolve(users.map(u => ({ value: { number: u.number, name: u.name, email: u.email }, label: `${u.number} (${u.name})` })))) || resolve([]);
       });
     });
   }
@@ -126,6 +130,17 @@ class Index extends React.Component {
         <Head>
           <meta name="viewport" content="initial-scale=1.0, width=device-width" />
         </Head>
+
+        {this.state.alert && (
+          <Alert variant="danger" className="fixed-top w-100" onClose={() => this.setState({ alert: null })}>
+            <Alert.Heading>{this.state.alert}</Alert.Heading>
+            <div className="d-flex justify-content-end">
+              <Button onClick={() => this.setState({ alert: null })} variant="outline-danger">
+                Close
+              </Button>
+            </div>
+          </Alert>
+        )}
 
         <Container>
           <Row>
