@@ -12,6 +12,7 @@ import Container from "react-bootstrap/Container";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Image from "react-bootstrap/Image";
+import Badge from "react-bootstrap/Badge";
 
 import QRCode from "qrcode.react";
 
@@ -36,11 +37,33 @@ class Index extends React.Component {
   constructor(props) {
     super(props);
 
+    this.state = {
+      dbConnected: false,
+      ioConnected: false,
+      mqttConnected: false
+    };
+
     this.io = {
       socket: io(),
       reader: io("/reader"),
       db: io("/db")
     };
+
+    this.io.socket.on("connect", () => {
+      this.setState({ ioConnected: true });
+    });
+
+    this.io.socket.on("disconnect", () => {
+      this.setState({ dbConnected: false, ioConnected: false, mqttConnected: false });
+    });
+
+    this.io.reader.on("mqttConnected", () => {
+      this.setState({ mqttConnected: true });
+    });
+
+    this.io.db.on("mongoConnected", () => {
+      this.setState({ dbConnected: true });
+    });
 
     this.io.reader.on("reader/card", card => {
       this.props.setCard(card);
@@ -66,14 +89,22 @@ class Index extends React.Component {
   }
 
   handleSubmit(event) {
-    const { name, n_number } = formSerialize(event.target);
+    const { name, number } = formSerialize(event.target);
     const { card } = this.props;
 
-    if (card && name && n_number) {
-      this.io.db.emit("createAccount", name, n_number, card, account => {
+    if (card && name && number) {
+      this.io.db.emit("createAccount", name, number, card, account => {
         this.props.setAccount(account);
       });
     }
+  }
+
+  loadOptions(input) {
+    return new Promise(resolve => {
+      this.io.db.emit("getUsers", input, users => {
+        (users && resolve(users.map(u => ({ value: { number: u.number, name: u.name }, label: `${u.number} (${u.name})` })))) || resolve([]);
+      });
+    });
   }
 
   handleCancel(event) {
@@ -98,24 +129,28 @@ class Index extends React.Component {
 
         <Container>
           <Row>
-            <Col className="text-center">
+            <Col lg={12} className="text-center">
               <Image src="static/Dover-Maker-Space2.png" />
             </Col>
           </Row>
-          <Row>
-            <Col className="yellow-title-background blue-text">
+          <Row className="yellow-title-background blue-text">
+            <Col lg={12}>
               <h1>Check-In Kiosk</h1>
+              <div className="m-2">
+                {this.state.ioConnected ? <Badge variant="success">Socket.io: Connected</Badge> : <Badge variant="danger">Socket.io: Disconnected</Badge>}{" "}
+                {this.state.mqttConnected ? <Badge variant="success">MQTT: Connected</Badge> : <Badge variant="danger">MQTT: Disconnected</Badge>}{" "}
+                {this.state.dbConnected ? <Badge variant="success">MongoDB: Connected</Badge> : <Badge variant="danger">MongoDB: Disconnected</Badge>}{" "}
+              </div>
             </Col>
           </Row>
           <Row className="yellow-background">
-            <Col lg="9" md="7">
+            <Col md={7} lg={8}>
               {!this.props.card && (
-                <Card style={{ width: "100%", height: "100%" }}>
+                <Card>
                   <Card.Header>Please scan your badge to begin</Card.Header>
                   <Card.Body />
                 </Card>
               )}
-
               {this.props.card &&
                 (this.props.account ? (
                   <Account
@@ -126,17 +161,13 @@ class Index extends React.Component {
                     }}
                   />
                 ) : this.props.card.FacilityCode > 0 && this.props.card.CardCode > 0 ? (
-                  <RegisterForm onSubmit={e => this.handleSubmit(e)} onCancel={e => this.handleCancel(e)} />
+                  <RegisterForm onSubmit={e => this.handleSubmit(e)} onCancel={e => this.handleCancel(e)} loadOptions={input => this.loadOptions(input)} />
                 ) : (
-                  <InvalidCard
-                    onOk={e => {
-                      this.handleCancel(e);
-                    }}
-                  />
+                  <InvalidCard onOk={e => this.handleCancel(e)} />
                 ))}
             </Col>
-            <Col lg="3" md="5">
-              <Card style={{ width: 250, height: "100%" }}>
+            <Col md={5} lg={4}>
+              <Card s_tyle={{ width: 250, height: "100%" }}>
                 <Card.Header>Raw Data</Card.Header>
                 <Card.Body>
                   <div className="text-center">
@@ -160,7 +191,7 @@ class Index extends React.Component {
             </Col>
           </Row>
           <Row className="yellow-background">
-            <Col>&nbsp;</Col>
+            <Col lg={12}>&nbsp;</Col>
           </Row>
         </Container>
       </div>
