@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const _ = require("lodash");
 const app = require("express")();
 const server = require("http").Server(app);
 const io = require("socket.io")(server);
@@ -17,6 +18,7 @@ const socketIO_connected = socket => `Socket.io connected [${socket.id}]`;
 const socketIO_disconnected = socket => `Socket.io disconnected [${socket.id}]`;
 
 const Account = require("./model/Account");
+const User = require("./model/User");
 
 // socket.io server
 io.on("connection", socket => {
@@ -42,7 +44,10 @@ io.of("/reader").on("connection", socket => {
 
       socket.emit(topic, card);
     })
-    .on("connect", () => console.log("Connected to MQTT"))
+    .on("connect", () => {
+      console.log("Connected to MQTT");
+      socket.emit("mqttConnected");
+    })
     .on("close", () => console.log("Disconnectd from MQTT"))
     .subscribe("reader/#");
 
@@ -145,6 +150,16 @@ io.of("/db").on("connection", socket => {
             )
             .then(accounts => [headers, ...accounts].reduce((a, c) => [...a, [c.name, c.nNumber, c.checkins]], []))
             .then(accounts => cb && cb(accounts))
+            .catch(err => {
+              console.error(err);
+              cb && cb(null);
+            });
+        })
+        .on("getUsers", (text, cb) => {
+          User.find({ $or: ["number", "name"].map(f => ({ [f]: { $regex: text, $options: "i" } })) })
+            .lean()
+            .limit(10)
+            .then(users => cb && cb(_.uniqBy(users, "number")))
             .catch(err => {
               console.error(err);
               cb && cb(null);
