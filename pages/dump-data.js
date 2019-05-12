@@ -19,6 +19,8 @@ import "bootstrap/dist/css/bootstrap.css";
 import "react-datepicker/dist/react-datepicker.css";
 import "../static/style.css";
 
+import Links from "../lib/Links";
+
 const mapStateToProps = (state = {}) => ({ ...state });
 const mapDispatchToProps = dispatch => ({
   setData: data => dispatch(setData(data))
@@ -55,14 +57,21 @@ class DumpData extends React.Component {
   }
 
   emailUrl(subject, data) {
-    return `mailto:?subject=${subject}&body=${encodeURI(typeof data !== "string" ? JSON.stringify(data) : data)}`;
+    return `mailto:?subject=${subject}&body=${encodeURI(
+      typeof data !== "string" ? JSON.stringify(data) : data
+    )}`;
   }
 
   componentDidUpdate() {
     if (this.props.data == null) {
-      this.io.db.emit("dumpData", this.state.startDate, this.state.endDate, data => {
-        this.props.setData(data);
-      });
+      this.io.db.emit(
+        "dumpData",
+        this.state.startDate,
+        this.state.endDate,
+        data => {
+          this.props.setData(data);
+        }
+      );
     }
   }
 
@@ -103,8 +112,16 @@ class DumpData extends React.Component {
           </Card.Header>
           <Card.Body>
             <Card.Title>
-              {this.state.ioConnected ? <Badge variant="success">Socket.io: Connected</Badge> : <Badge variant="danger">Socket.io: Disconnected</Badge>}{" "}
-              {this.state.dbConnected ? <Badge variant="success">MongoDB: Connected</Badge> : <Badge variant="danger">MongoDB: Disconnected</Badge>}{" "}
+              {this.state.ioConnected ? (
+                <Badge variant="success">Socket.io: Connected</Badge>
+              ) : (
+                <Badge variant="danger">Socket.io: Disconnected</Badge>
+              )}{" "}
+              {this.state.dbConnected ? (
+                <Badge variant="success">MongoDB: Connected</Badge>
+              ) : (
+                <Badge variant="danger">MongoDB: Disconnected</Badge>
+              )}{" "}
             </Card.Title>
             <Card.Title>
               <span>Checkins from </span>
@@ -126,10 +143,19 @@ class DumpData extends React.Component {
               <Container className="p-2">
                 <Row>
                   <Col>
-                    <QRCode size={400} value={this.emailUrl("Kiosk Data", this.props.data.map(row => row.join(",")).join("\n"))} />
+                    <QRCode
+                      size={400}
+                      value={this.emailUrl(
+                        "Kiosk Data",
+                        this.props.data.map(row => row.join(",")).join("\n")
+                      )}
+                    />
                   </Col>
                   <Col>
-                    <pre style={{ width: 400, height: 400 }} className="scrollable">
+                    <pre
+                      style={{ width: 400, height: 400 }}
+                      className="scrollable"
+                    >
                       {this.props.data.map(row => JSON.stringify(row) + "\n")}
                     </pre>
                   </Col>
@@ -137,7 +163,9 @@ class DumpData extends React.Component {
               </Container>
             )}
           </Card.Body>
-          <Card.Footer> </Card.Footer>
+          <Card.Footer>
+            <Links />
+          </Card.Footer>
         </Card>
       </Container>
     );

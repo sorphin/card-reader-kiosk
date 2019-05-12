@@ -23,9 +23,10 @@ import "bootstrap/dist/css/bootstrap-grid.css";
 import "bootstrap/dist/css/bootstrap.css";
 import "../static/style.css";
 
-import Account from "./Account";
-import RegisterForm from "./RegisterForm";
-import InvalidCard from "./InvalidCard";
+import Account from "../lib/Account";
+import RegisterForm from "../lib/RegisterForm";
+import InvalidCard from "../lib/InvalidCard";
+import Links from "../lib/Links";
 
 const mapStateToProps = (state = {}) => ({ ...state });
 const mapDispatchToProps = dispatch => ({
@@ -56,7 +57,11 @@ class Index extends React.Component {
     });
 
     this.io.socket.on("disconnect", () => {
-      this.setState({ dbConnected: false, ioConnected: false, mqttConnected: false });
+      this.setState({
+        dbConnected: false,
+        ioConnected: false,
+        mqttConnected: false
+      });
     });
 
     this.io.reader.on("mqttConnected", () => {
@@ -106,7 +111,14 @@ class Index extends React.Component {
   loadOptions(input) {
     return new Promise(resolve => {
       this.io.db.emit("getUsers", input, users => {
-        (users && resolve(users.map(u => ({ value: { number: u.number, name: u.name, email: u.email }, label: `${u.number} (${u.name})` })))) || resolve([]);
+        (users &&
+          resolve(
+            users.map(u => ({
+              value: { number: u.number, name: u.name, email: u.email },
+              label: `${u.number} (${u.name})`
+            }))
+          )) ||
+          resolve([]);
       });
     });
   }
@@ -116,7 +128,9 @@ class Index extends React.Component {
   }
 
   dataUrl(data) {
-    return `data:application/json;base64,${Buffer.from(JSON.stringify(data, null, 2)).toString("base64")}`;
+    return `data:application/json;base64,${Buffer.from(
+      JSON.stringify(data, null, 2)
+    ).toString("base64")}`;
   }
 
   emailUrl(subject, data) {
@@ -124,18 +138,32 @@ class Index extends React.Component {
   }
 
   render() {
-    var raw_data = JSON.stringify({ card: this.props.card, account: this.props.account }, null, 2);
+    var raw_data = JSON.stringify(
+      { card: this.props.card, account: this.props.account },
+      null,
+      2
+    );
     return (
       <div>
         <Head>
-          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+          <meta
+            name="viewport"
+            content="initial-scale=1.0, width=device-width"
+          />
         </Head>
 
         {this.state.alert && (
-          <Alert variant="danger" className="fixed-top w-100" onClose={() => this.setState({ alert: null })}>
+          <Alert
+            variant="danger"
+            className="fixed-top w-100"
+            onClose={() => this.setState({ alert: null })}
+          >
             <Alert.Heading>{this.state.alert}</Alert.Heading>
             <div className="d-flex justify-content-end">
-              <Button onClick={() => this.setState({ alert: null })} variant="outline-danger">
+              <Button
+                onClick={() => this.setState({ alert: null })}
+                variant="outline-danger"
+              >
                 Close
               </Button>
             </div>
@@ -152,9 +180,21 @@ class Index extends React.Component {
             <Col lg={12}>
               <h1>Check-In Kiosk</h1>
               <div className="m-2">
-                {this.state.ioConnected ? <Badge variant="success">Socket.io: Connected</Badge> : <Badge variant="danger">Socket.io: Disconnected</Badge>}{" "}
-                {this.state.mqttConnected ? <Badge variant="success">MQTT: Connected</Badge> : <Badge variant="danger">MQTT: Disconnected</Badge>}{" "}
-                {this.state.dbConnected ? <Badge variant="success">MongoDB: Connected</Badge> : <Badge variant="danger">MongoDB: Disconnected</Badge>}{" "}
+                {this.state.ioConnected ? (
+                  <Badge variant="success">Socket.io: Connected</Badge>
+                ) : (
+                  <Badge variant="danger">Socket.io: Disconnected</Badge>
+                )}{" "}
+                {this.state.mqttConnected ? (
+                  <Badge variant="success">MQTT: Connected</Badge>
+                ) : (
+                  <Badge variant="danger">MQTT: Disconnected</Badge>
+                )}{" "}
+                {this.state.dbConnected ? (
+                  <Badge variant="success">MongoDB: Connected</Badge>
+                ) : (
+                  <Badge variant="danger">MongoDB: Disconnected</Badge>
+                )}{" "}
               </div>
             </Col>
           </Row>
@@ -175,14 +215,19 @@ class Index extends React.Component {
                       this.handleCancel(e);
                     }}
                   />
-                ) : this.props.card.FacilityCode > 0 && this.props.card.CardCode > 0 ? (
-                  <RegisterForm onSubmit={e => this.handleSubmit(e)} onCancel={e => this.handleCancel(e)} loadOptions={input => this.loadOptions(input)} />
+                ) : this.props.card.FacilityCode > 0 &&
+                  this.props.card.CardCode > 0 ? (
+                  <RegisterForm
+                    onSubmit={e => this.handleSubmit(e)}
+                    onCancel={e => this.handleCancel(e)}
+                    loadOptions={input => this.loadOptions(input)}
+                  />
                 ) : (
                   <InvalidCard onOk={e => this.handleCancel(e)} />
                 ))}
             </Col>
             <Col md={5} lg={4}>
-              <Card s_tyle={{ width: 250, height: "100%" }}>
+              <Card>
                 <Card.Header>Raw Data</Card.Header>
                 <Card.Body>
                   <div className="text-center">
@@ -206,7 +251,9 @@ class Index extends React.Component {
             </Col>
           </Row>
           <Row className="yellow-background">
-            <Col lg={12}>&nbsp;</Col>
+            <Col lg={12}>
+              <Links />
+            </Col>
           </Row>
         </Container>
       </div>
