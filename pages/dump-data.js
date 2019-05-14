@@ -12,6 +12,9 @@ import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Card from "react-bootstrap/Card";
 import Badge from "react-bootstrap/Badge";
+import Button from "react-bootstrap/Button";
+import ButtonToolbar from "react-bootstrap/ButtonToolbar";
+import ListGroup from "react-bootstrap/ListGroup";
 
 import "bootstrap/dist/css/bootstrap-reboot.css";
 import "bootstrap/dist/css/bootstrap-grid.css";
@@ -51,6 +54,15 @@ class DumpData extends React.Component {
     this.io.db.on("connect", () => {
       this.setState({ ioConnected: true });
     });
+  }
+
+  drawName() {
+    var pick = Math.floor(
+      ((Math.random() * 100) % (this.props.data.length - 1)) + 1
+    );
+
+    console.log(this.props.data[pick]);
+    this.setState({ nameDrawn: this.props.data[pick] });
   }
 
   componentWillUnmount() {
@@ -142,27 +154,49 @@ class DumpData extends React.Component {
             </Card.Title>
             {this.props.data && (
               <Container className="p-2">
-                <Row>
-                  <Col>
-                    {this.props.data.length < 50 && (
-                      <QRCode
-                        size={400}
-                        value={this.emailUrl(
-                          "Kiosk Data",
-                          this.props.data.map(row => row.join(",")).join("\n")
-                        )}
-                      />
-                    )}
-                  </Col>
-                  <Col>
-                    <pre
-                      style={{ width: 400, height: 400 }}
-                      className="scrollable"
-                    >
-                      {this.props.data.map(row => JSON.stringify(row) + "\n")}
-                    </pre>
-                  </Col>
-                </Row>
+                {this.state.nameDrawn ? (
+                  <Row>
+                    <Col>
+                      <h1>
+                        <Badge variant="warning">
+                          {this.state.nameDrawn[0]} ({this.state.nameDrawn[1]})
+                        </Badge>
+                      </h1>
+                    </Col>
+                  </Row>
+                ) : (
+                  <Row>
+                    <Col>
+                      {this.props.data.length < 50 && (
+                        <QRCode
+                          size={400}
+                          value={this.emailUrl(
+                            "Kiosk Data",
+                            this.props.data.map(row => row.join(",")).join("\n")
+                          )}
+                        />
+                      )}
+                    </Col>
+                    <Col>
+                      <div>
+                        <ButtonToolbar
+                          className="mb-2"
+                          onClick={e => this.drawName()}
+                        >
+                          <Button>Draw Name</Button>
+                        </ButtonToolbar>
+                        <pre
+                          style={{ width: "auto", height: 400 }}
+                          className="scrollable"
+                        >
+                          {this.props.data.map(
+                            row => JSON.stringify(row) + "\n"
+                          )}
+                        </pre>
+                      </div>
+                    </Col>
+                  </Row>
+                )}
               </Container>
             )}
           </Card.Body>
