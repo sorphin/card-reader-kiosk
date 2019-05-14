@@ -9,14 +9,29 @@ mongoose.Promise = global.Promise;
 require("dotenv").config();
 require("yargs")
   .command(
-    "export",
+    "export [query]",
     "Export User Collection.",
-    yargs => {},
+    yargs => {
+      yargs.positional("query", {
+        describe: "serch string for finding records",
+        type: "string"
+      });
+    },
     argv =>
       mongoose
         .connect(process.env.dbURL, { useMongoClient: true })
         .then(db => {
-          User.find()
+          var q = undefined;
+
+          if (argv.query) {
+            var re = new RegExp(argv.query, "i");
+            q = { $or: [{ name: re }, { number: re }] };
+          }
+
+          console.log({ q });
+
+          User.find(q)
+            .limit(5)
             .then(data => {
               console.log(data);
             })
@@ -34,7 +49,7 @@ require("yargs")
       yargs
         .positional("file", {
           describe: "A CSV File to import.",
-          type: "string",
+          type: "string"
         })
         .demandOption("file", "I need a file to import");
     },
@@ -47,7 +62,7 @@ require("yargs")
           const rl = readline
             .createInterface({
               input: fs.createReadStream(argv.file),
-              crlfDelay: Infinity,
+              crlfDelay: Infinity
             })
             .on("line", line => {
               if (columns == null) {
@@ -61,7 +76,7 @@ require("yargs")
                       first: record["First Name"],
                       last: record["Last Name"],
                       number: record["Number"],
-                      email: record["Email"],
+                      email: record["Email"]
                     }))
                     .map(record =>
                       User.find({ number: new RegExp(record.number, "i") })
@@ -70,7 +85,7 @@ require("yargs")
                             User.create({
                               name: `${record.first} ${record.last}`,
                               number: record.number,
-                              email: record.email,
+                              email: record.email
                             })
                               .then(user => {
                                 console.log(
