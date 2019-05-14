@@ -80,21 +80,16 @@ require("yargs")
                     }))
                     .map(record =>
                       User.find({ number: new RegExp(record.number, "i") })
-                        .then(data =>
-                          data.length == 0
-                            ? User.create({
-                                name: `${record.first} ${record.last}`,
-                                number: record.number,
-                                email: record.email
-                              }).then(user =>
-                                console.log(
-                                  `${user.name} (${user.number}) added`
-                                )
-                              )
-                            : new Promise(resolve => {
-                                console.log(record.number);
-                                resolve();
-                              })
+                        .then(
+                          data =>
+                            data.length == 0 &&
+                            User.create({
+                              name: `${record.first} ${record.last}`,
+                              number: record.number,
+                              email: record.email
+                            }).then(user =>
+                              console.log(`${user.name} (${user.number}) added`)
+                            )
                         )
                         .catch(err => console.error(err))
                     );
