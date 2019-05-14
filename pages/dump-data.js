@@ -179,11 +179,13 @@ class DumpData extends React.Component {
                     </Col>
                     <Col>
                       <div>
-                        <ButtonToolbar
-                          className="mb-2"
-                          onClick={e => this.drawName()}
-                        >
-                          <Button>Draw Name</Button>
+                        <ButtonToolbar className="mb-2">
+                          <Button onClick={e => this.drawName()}>
+                            Draw Name
+                          </Button>
+                          <Button variant="outline-primary" disabled={true}>
+                            Checkin Count: {this.props.data.length - 1}
+                          </Button>
                         </ButtonToolbar>
                         <pre
                           style={{ width: "auto", height: 400 }}
