@@ -81,20 +81,19 @@ require("yargs")
                     .map(record =>
                       User.find({ number: new RegExp(record.number, "i") })
                         .then(data => {
+                          console.log(record.number, data.length);
                           if (data.length == 0) {
                             User.create({
                               name: `${record.first} ${record.last}`,
                               number: record.number,
                               email: record.email
                             })
-                              .then(user => {
+                              .then(user =>
                                 console.log(
                                   `${user.name} (${user.number}) added`
-                                );
-                              })
+                                )
+                              )
                               .catch(err => console.error(err));
-                          } else {
-                            console.log(record.number, "exists");
                           }
                         })
                         .catch(err => console.error(err))
