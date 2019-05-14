@@ -71,38 +71,37 @@ require("yargs")
                 parse(line, { columns }, (err, records) => {
                   if (err) throw err;
 
-                  records
-                    .map(record => ({
-                      first: record["First Name"],
-                      last: record["Last Name"],
-                      number: record["Number"],
-                      email: record["Email"]
-                    }))
-                    .map(record =>
-                      User.find({ number: new RegExp(record.number, "i") })
-                        .then(data => {
-                          console.log(record.number, data.length);
-                          if (data.length == 0) {
-                            User.create(
-                              {
-                                name: `${record.first} ${record.last}`,
-                                number: record.number,
-                                email: record.email
-                              },
-                              function(err, user) {
-                                if (err) {
-                                  console({ err });
-                                } else {
+                  Promise.all(
+                    records
+                      .map(record => ({
+                        first: record["First Name"],
+                        last: record["Last Name"],
+                        number: record["Number"],
+                        email: record["Email"]
+                      }))
+                      .map(record =>
+                        User.find({ number: new RegExp(record.number, "i") })
+                          .then(data =>
+                            data.length == 0
+                              ? User.create({
+                                  name: `${record.first} ${record.last}`,
+                                  number: record.number,
+                                  email: record.email
+                                }).then(user =>
                                   console.log(
                                     `${user.name} (${user.number}) added`
-                                  );
-                                }
-                              }
-                            );
-                          }
-                        })
-                        .catch(err => console.error(err))
-                    );
+                                  )
+                                )
+                              : new Promise(resolve => {
+                                  console.log(record.number);
+                                  resolve();
+                                })
+                          )
+                          .catch(err => console.error(err))
+                      )
+                  ).then(() => {
+                    db.close();
+                  });
                 });
               }
             })
