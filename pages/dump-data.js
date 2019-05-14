@@ -23,7 +23,7 @@ import Links from "../lib/Links";
 
 const mapStateToProps = (state = {}) => ({ ...state });
 const mapDispatchToProps = dispatch => ({
-  setData: data => dispatch(setData(data)),
+  setData: data => dispatch(setData(data))
 });
 
 class DumpData extends React.Component {
@@ -37,11 +37,11 @@ class DumpData extends React.Component {
       startDate: moment().startOf("day"),
       endDate: moment()
         .add(1, "days")
-        .startOf("day"),
+        .startOf("day")
     };
 
     this.io = {
-      db: io("/db"),
+      db: io("/db")
     };
 
     this.io.db.on("mongoConnected", () => {
@@ -83,7 +83,7 @@ class DumpData extends React.Component {
       this.setState({
         endDate: moment(e)
           .add(1, "days")
-          .startOf("day"),
+          .startOf("day")
       });
     }
 
@@ -97,7 +97,7 @@ class DumpData extends React.Component {
       this.setState({
         startDate: moment(e)
           .add(-1, "days")
-          .startOf("day"),
+          .startOf("day")
       });
     }
 
@@ -144,13 +144,15 @@ class DumpData extends React.Component {
               <Container className="p-2">
                 <Row>
                   <Col>
-                    <QRCode
-                      size={400}
-                      value={this.emailUrl(
-                        "Kiosk Data",
-                        this.props.data.map(row => row.join(",")).join("\n")
-                      )}
-                    />
+                    {this.props.data.length < 50 && (
+                      <QRCode
+                        size={400}
+                        value={this.emailUrl(
+                          "Kiosk Data",
+                          this.props.data.map(row => row.join(",")).join("\n")
+                        )}
+                      />
+                    )}
                   </Col>
                   <Col>
                     <pre
