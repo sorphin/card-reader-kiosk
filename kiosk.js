@@ -83,17 +83,22 @@ require("yargs")
                         .then(data => {
                           console.log(record.number, data.length);
                           if (data.length == 0) {
-                            User.create({
-                              name: `${record.first} ${record.last}`,
-                              number: record.number,
-                              email: record.email
-                            })
-                              .then(user =>
-                                console.log(
-                                  `${user.name} (${user.number}) added`
-                                )
-                              )
-                              .catch(err => console.error(err));
+                            User.create(
+                              {
+                                name: `${record.first} ${record.last}`,
+                                number: record.number,
+                                email: record.email
+                              },
+                              function(err, user) {
+                                if (err) {
+                                  console({ err });
+                                } else {
+                                  console.log(
+                                    `${user.name} (${user.number}) added`
+                                  );
+                                }
+                              }
+                            );
                           }
                         })
                         .catch(err => console.error(err))
