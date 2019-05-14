@@ -71,37 +71,33 @@ require("yargs")
                 parse(line, { columns }, (err, records) => {
                   if (err) throw err;
 
-                  Promise.all(
-                    records
-                      .map(record => ({
-                        first: record["First Name"],
-                        last: record["Last Name"],
-                        number: record["Number"],
-                        email: record["Email"]
-                      }))
-                      .map(record =>
-                        User.find({ number: new RegExp(record.number, "i") })
-                          .then(data =>
-                            data.length == 0
-                              ? User.create({
-                                  name: `${record.first} ${record.last}`,
-                                  number: record.number,
-                                  email: record.email
-                                }).then(user =>
-                                  console.log(
-                                    `${user.name} (${user.number}) added`
-                                  )
+                  records
+                    .map(record => ({
+                      first: record["First Name"],
+                      last: record["Last Name"],
+                      number: record["Number"],
+                      email: record["Email"]
+                    }))
+                    .map(record =>
+                      User.find({ number: new RegExp(record.number, "i") })
+                        .then(data =>
+                          data.length == 0
+                            ? User.create({
+                                name: `${record.first} ${record.last}`,
+                                number: record.number,
+                                email: record.email
+                              }).then(user =>
+                                console.log(
+                                  `${user.name} (${user.number}) added`
                                 )
-                              : new Promise(resolve => {
-                                  console.log(record.number);
-                                  resolve();
-                                })
-                          )
-                          .catch(err => console.error(err))
-                      )
-                  ).then(() => {
-                    db.close();
-                  });
+                              )
+                            : new Promise(resolve => {
+                                console.log(record.number);
+                                resolve();
+                              })
+                        )
+                        .catch(err => console.error(err))
+                    );
                 });
               }
             })
@@ -110,7 +106,6 @@ require("yargs")
             })
             .on("close", () => {
               rl.close();
-              db.close();
             });
         })
         .catch(err => console.error(err))
